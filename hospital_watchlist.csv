@@ -1,0 +1,16 @@
+drug_keyword,priority,department,notes
+Dopamine,Critical,ICU,Vasopressor for shock; no easy substitute in emergencies
+Epinephrine,Critical,Emergency / ICU,Anaphylaxis and cardiac arrest
+Heparin,Critical,ICU / Cardiology,Anticoagulation; high volume use
+Lidocaine,Critical,Anesthesia,Local anesthesia and arrhythmias
+Bupivacaine,High,Anesthesia,Regional and spinal anesthesia
+Midazolam,High,Anesthesia / ICU,Sedation
+Morphine,High,Pain management,Opioid analgesia
+Sodium Bicarbonate,Critical,ICU / Emergency,Acidosis and cardiac arrest
+Furosemide,High,Cardiology / Nephrology,Diuretic for fluid overload
+Cisplatin,Critical,Oncology,Chemotherapy; treatment delays affect outcomes
+Carboplatin,Critical,Oncology,Chemotherapy; treatment delays affect outcomes
+Methotrexate,High,Oncology / Rheumatology,Chemotherapy and autoimmune treatment
+Amoxicillin,Standard,General / Pediatrics,Common antibiotic; alternatives usually exist
+Albuterol,High,Respiratory / Pediatrics,Asthma rescue inhaler
+Lisdexamfetamine,Standard,Psychiatry,ADHD treatment; outpatient mostly

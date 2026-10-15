@@ -1,0 +1,1125 @@
+{
+  "name": "FDA Drug Shortage Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "id": "493bd8fc-c87b-4c47-9b9e-ec4024c06bf6",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.fda.gov/drug/shortages.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "status:\"Current\""
+            },
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "skip",
+                    "value": "={{ $pageCount * 1000 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.meta.results.skip + $response.body.meta.results.limit >= $response.body.meta.results.total }}",
+              "limitPagesFetched": true,
+              "maxRequests": 5,
+              "requestInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        176
+      ],
+      "id": "da6a23cd-8ecc-4d24-89ea-d25071a75f12",
+      "name": "Get FDA Shortages",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        80
+      ],
+      "id": "c85f1495-7eca-4ba8-89d0-9412ef0e98a1",
+      "name": "Split Shortages"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61abb067-790b-43fd-b0f8-61e63352fea6",
+              "name": "generic_name",
+              "value": "={{ $json.generic_name }}",
+              "type": "string"
+            },
+            {
+              "id": "83718e76-804f-45c8-bd5b-7b0ce1e7c1f3",
+              "name": "availability",
+              "value": "={{ $json.availability }}",
+              "type": "string"
+            },
+            {
+              "id": "6233bb62-0312-4574-b46c-07810fb251c2",
+              "name": "related_info",
+              "value": "={{ $json.related_info }}",
+              "type": "string"
+            },
+            {
+              "id": "15379ad9-7b90-4540-8b32-bb653374f00d",
+              "name": "initial_posting_date",
+              "value": "={{ $json.initial_posting_date }}",
+              "type": "string"
+            },
+            {
+              "id": "e781fc33-31e4-4141-887b-cd4e8da21d02",
+              "name": "contact_info",
+              "value": "={{ $json.contact_info }}",
+              "type": "string"
+            },
+            {
+              "id": "71aa57cd-08c4-48d0-bf5f-adb686b7fa74",
+              "name": "dosage_form",
+              "value": "={{ $json.dosage_form }}",
+              "type": "string"
+            },
+            {
+              "id": "c265158d-fd56-423e-baa1-6b01985905c2",
+              "name": "company_name",
+              "value": "={{ $json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "56cc4de6-9d01-4ae4-9dfe-aea826e78970",
+              "name": "shortage_reason",
+              "value": "={{ $json.shortage_reason }}",
+              "type": "string"
+            },
+            {
+              "id": "305bab08-b9a9-4dd6-9026-c5131d1cb3ec",
+              "name": "therapeutic_category",
+              "value": "={{ $json.therapeutic_category }}",
+              "type": "array"
+            },
+            {
+              "id": "e4a403a2-5717-4458-8f0a-9b0c488aae00",
+              "name": "manufacturer",
+              "value": "={{ $json.openfda?.manufacturer_name?.[0] ?? 'Unknown' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1488,
+        80
+      ],
+      "id": "a1b74d9a-cd02-45a9-aac5-522909607d9a",
+      "name": "Clean Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Drug Shortages Watchlist",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "watchlist",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        176
+      ],
+      "id": "0f1f088f-15bb-4086-bc1c-9d78eb06958d",
+      "name": "Get Watchlist",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oASe6lJbelFbR20U",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Watchlist rows from the Google Sheet\nconst watchlist = $('Get Watchlist').all().map(i => i.json);\n\n// 2. All cleaned FDA shortage records\nconst shortages = $input.all().map(i => i.json);\n\nconst groups = {};\n\nfor (const s of shortages) {\n  const name = (s.generic_name || '').toLowerCase();\n\n  // Find a watchlist drug whose keyword appears in the FDA generic name\n  const match = watchlist.find(w =>\n    name.includes(String(w.drug_keyword).toLowerCase())\n  );\n  if (!match) continue; // not on our watchlist, skip\n\n  // One group per watchlist drug\n  const key = match.drug_keyword;\n  if (!groups[key]) {\n    groups[key] = {\n      drug_keyword: key,\n      priority: match.priority,\n      department: match.department,\n      watchlist_notes: match.notes,\n      affected_presentations: 0,\n      unavailable_count: 0,\n      limited_count: 0,\n      products: new Set(),\n      companies: new Set(),\n      reasons: new Set(),\n      related_info: new Set(),\n    };\n  }\n\n  const g = groups[key];\n  g.affected_presentations += 1;\n  if (s.availability === 'Unavailable') g.unavailable_count += 1;\n  if (s.availability === 'Limited Availability') g.limited_count += 1;\n  g.products.add(s.generic_name);\n  if (s.company_name) g.companies.add(s.company_name);\n  if (s.shortage_reason) g.reasons.add(s.shortage_reason);\n  if (s.related_info) g.related_info.add(s.related_info);\n}\n\n// 3. Output one item per affected watchlist drug\nreturn Object.values(groups).map(g => ({\n  json: {\n    ...g,\n    products: [...g.products],\n    companies: [...g.companies],\n    reasons: [...g.reasons],\n    related_info: [...g.related_info].slice(0, 5),\n  },\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        80
+      ],
+      "id": "45fa9041-0657-4770-97aa-e65fe8449d9a",
+      "name": "Match Watchlist"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a hospital pharmacy supply analyst. You assess US FDA drug shortage data for a hospital's watchlist drugs.\n\nRules:\n- Use only the data provided. Never invent recovery dates, causes or clinical facts.\n- If the cause or recovery date is not stated, say \"unknown\".\n- Severity reflects operational risk to the hospital: consider the hospital priority, how many presentations are unavailable versus limited, and whether alternatives or recovery dates are mentioned.\n- FDA dates use M/D/YY format: 9/25/26 means 25 September 2026.\n- Compare every stated recovery date with today's date. If it is earlier than today, the date has passed: say \"stated recovery date (DATE) has passed, current status unclear\" and do not describe it as upcoming.\n\nReturn only valid JSON with exactly these keys:\n{\n  \"severity\": \"Critical\" | \"High\" | \"Medium\" | \"Low\",\n  \"likely_cause\": \"Manufacturing delay\" | \"Demand increase\" | \"Raw material shortage\" | \"Discontinuation\" | \"Quality or regulatory issue\" | \"Shipping delay\" | \"Unknown\",\n\"recovery_date_passed\": true | false | null,\n  \"expected_recovery\": \"short text, or unknown\",\n  \"summary\": \"2 sentences max, plain language for a pharmacy manager\",\n  \"recommended_action\": \"one concrete next step\",\n  \"alert_draft\": \"a short message (max 80 words) to the clinical department, factual and calm\"\n}"
+            },
+            {
+              "content": "=Today's date: {{ $now.toFormat('yyyy-MM-dd') }}\nDrug: {{ $json.drug_keyword }}\nHospital priority: {{ $json.priority }} ({{ $json.department }})\nWhy it matters: {{ $json.watchlist_notes }}\nAffected presentations: {{ $json.affected_presentations }} (unavailable: {{ $json.unavailable_count }}, limited: {{ $json.limited_count }})\nProducts: {{ $json.products.join('; ') }}\nCompanies: {{ $json.companies.join('; ') }}\nStated reasons: {{ $json.reasons.join('; ') || 'none stated' }}\nFDA notes: {{ $json.related_info.join(' | ') || 'none' }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          },
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        80
+      ],
+      "id": "ef94f925-f40b-4ddf-ac81-ac9bb3763c68",
+      "name": "LLM Triage",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "openAiApi": {
+          "id": "8WugwfuNzU11uD7l",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The model's answer (handles both object and text formats)\nconst raw = $json.output?.[0]?.content?.[0]?.text;\nconst triage = typeof raw === 'string' ? JSON.parse(raw) : raw;\n\n// The matching drug record from before the LLM step\nconst drug = $('Match Watchlist').item.json;\n\n// Guardrail: only accept the severity values we defined\nconst validSeverity = ['Critical', 'High', 'Medium', 'Low'];\nif (!triage || !validSeverity.includes(triage.severity)) {\n  throw new Error(`Invalid LLM output for ${drug.drug_keyword}`);\n}\n\n// Change detection: was this drug's alert sent in the last 7 days?\nconst log = $('Get Alert Log').all().map(i => i.json);\nconst cutoff = $now.minus({ days: 7 }).toFormat('yyyy-MM-dd');\nconst recentlyAlerted = log.some(r =>\n  r.drug === drug.drug_keyword &&\n  r.decision === 'Sent' &&\n  String(r.run_date) >= cutoff\n);\n\n// Escalation rule, computed once\nconst meetsRule =\n  (drug.priority === 'Critical' && ['Critical', 'High'].includes(triage.severity)) ||\n  (drug.priority === 'High' && triage.severity === 'Critical');\n\nreturn {\n  json: {\n    drug: drug.drug_keyword,\n    priority: drug.priority,\n    department: drug.department,\n    affected_presentations: drug.affected_presentations,\n    unavailable_count: drug.unavailable_count,\n    limited_count: drug.limited_count,\n    ...triage,\n    recently_alerted: recentlyAlerted,\n    escalate: meetsRule && !recentlyAlerted,\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        80
+      ],
+      "id": "33a00d38-08f3-4cd8-a57d-deaf6b3a5ea2",
+      "name": "Parse & Validate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4eb11666-4fb5-487e-8696-7c7e3eec18d6",
+              "leftValue": "={{ $json.escalate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2736,
+        368
+      ],
+      "id": "fb2e1b3f-614f-4b52-999a-6f71b8890cd4",
+      "name": "Needs Escalation?"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "pharmacy@example.com",
+        "subject": "=[{{ $json.severity }}] Shortage alert for approval: {{ $json.drug }}",
+        "message": "=   Drug: {{ $json.drug }} ({{ $json.department }})\n   Hospital priority: {{ $json.priority }} | AI severity: {{ $json.severity }}\n   Presentations affected: {{ $json.affected_presentations }} (unavailable: {{ $json.unavailable_count }}, limited: {{ $json.limited_count }})\n   Likely cause: {{ $json.likely_cause }}\n   Expected recovery: {{ $json.expected_recovery }}\n\n   Summary: {{ $json.summary }}\n   Recommended action: {{ $json.recommended_action }}\n\n   PROPOSED ALERT TO DEPARTMENT:\n   {{ $json.alert_draft }}\n\n   Source: openFDA (unvalidated data). Approve to send, Disapprove to log only.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 4
+            }
+          },
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3168,
+        128
+      ],
+      "id": "833cd1bb-c87c-4b4f-884c-9ef772509701",
+      "name": "Pharmacist Approval",
+      "webhookId": "fafc0096-acaa-45c6-9620-3914ee994874",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "obyDOQrjRZKeSE6x",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2fbbd3fa-b7d2-49c8-852a-8bf28ca71089",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3344,
+        240
+      ],
+      "id": "d1036799-114b-418f-8051-e45613080996",
+      "name": "Approved?"
+    },
+    {
+      "parameters": {
+        "sendTo": "pharmacy@example.com",
+        "subject": "=Drug shortage alert: {{ $('Parse & Validate').item.json.drug }}",
+        "emailType": "text",
+        "message": "={{ $('Parse & Validate').item.json.alert_draft }}\n\nRecommended action: {{ $('Parse & Validate').item.json.recommended_action }}\nReviewed and approved by pharmacy. Source: openFDA.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3520,
+        112
+      ],
+      "id": "6c51957a-736d-4110-998e-161d5f32c43c",
+      "name": "Send Alert to Department",
+      "webhookId": "e29237a0-4f8f-4538-b9be-7248a0a0238b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "obyDOQrjRZKeSE6x",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4fd1e294-aaff-4c02-88d0-eef9776f408b",
+              "name": "decision",
+              "value": "={{ $('Pharmacist Approval').item.json.data?.approved === false ? 'Rejected' : 'No response (timed out)' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3840,
+        256
+      ],
+      "id": "b778fe10-b8be-4586-bcab-1e0cbc6d84dd",
+      "name": "Mark Rejected"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6c55ea2-98f4-442a-9d2c-fa518268219e",
+              "name": "decision",
+              "value": "Not Escalated",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        4160,
+        368
+      ],
+      "id": "cebb32e0-c983-4d7d-a947-2a05ec855253",
+      "name": "Mark Not Escalated"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31cce78c-9cea-451d-9e65-d2b74eeedc1d",
+              "name": "decision",
+              "value": "Sent",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        4064,
+        128
+      ],
+      "id": "41d95f5e-52b9-4943-84e3-ba81d7f25633",
+      "name": "Mark Sent"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Drug Shortages Watchlist",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 800941846,
+          "mode": "list",
+          "cachedResultName": "alert_log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=800941846"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_date": "={{ $now.toFormat('yyyy-MM-dd') }}",
+            "drug": "={{ $('Parse & Validate').item.json.drug }}",
+            "department": "={{ $('Parse & Validate').item.json.department }}",
+            "priority": "={{ $('Parse & Validate').item.json.priority }}",
+            "severity": "={{ $('Parse & Validate').item.json.severity }}",
+            "likely_cause": "={{ $('Parse & Validate').item.json.likely_cause }}",
+            "expected_recovery": "={{ $('Parse & Validate').item.json.expected_recovery }}",
+            "decision": "={{ $json.decision }}",
+            "summary": "={{ $('Parse & Validate').item.json.summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "run_date",
+              "displayName": "run_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "drug",
+              "displayName": "drug",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "department",
+              "displayName": "department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "likely_cause",
+              "displayName": "likely_cause",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expected_recovery",
+              "displayName": "expected_recovery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4416,
+        256
+      ],
+      "id": "6f674116-80ab-4940-b7b3-34579b262a1f",
+      "name": "Log Outcome",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oASe6lJbelFbR20U",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ad2b722d-6333-4438-9493-254443c73b64",
+              "leftValue": "={{ $json.results }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        176
+      ],
+      "id": "15dcd241-8bcc-4074-b1a4-65eecec686f3",
+      "name": "API Response OK?"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=openFDA returned no shortage data. Response: {{ JSON.stringify($json).slice(0, 300) }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        272
+      ],
+      "id": "55af701d-ed5e-4311-a34f-81f7251baa69",
+      "name": "Fail: No API Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(i => i.json);\nconst escalated = items.filter(d => d.escalate);\nconst monitored = items.filter(d => !d.escalate);\n\nconst line = d =>\n  `- ${d.drug} (${d.department}) | priority ${d.priority}, severity ${d.severity} | ${d.likely_cause} | recovery: ${d.expected_recovery}${d.recently_alerted ? ' | alert already sent this week' : ''}`;\n\nconst body = [\n  `Drug shortage digest for ${$now.toFormat('dd LLL yyyy')}`,\n  '',\n  `${items.length} watchlist drugs are currently in shortage. ${escalated.length} sent for approval.`,\n  '',\n  'ESCALATED (awaiting approval):',\n  ...(escalated.length ? escalated.map(line) : ['- none']),\n  '',\n  'MONITORING ONLY:',\n  ...(monitored.length ? monitored.map(line) : ['- none']),\n  '',\n  'Source: openFDA drug shortages (unvalidated data). Full history in the alert_log sheet.',\n].join('\\n');\n\nreturn [{\n  json: {\n    subject: `Drug shortage digest: ${escalated.length} need approval, ${items.length} in shortage`,\n    body,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        80
+      ],
+      "id": "8f29b8c9-2ce2-4c17-a3a2-db02c2fc12f3",
+      "name": "Build Digest"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Drug Shortages Watchlist",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 800941846,
+          "mode": "list",
+          "cachedResultName": "alert_log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=800941846"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        176
+      ],
+      "id": "ec9ea49e-2683-4078-8cb8-df89c54091a8",
+      "name": "Get Alert Log",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oASe6lJbelFbR20U",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2944,
+        112
+      ],
+      "id": "8bd24be6-d844-48e6-9c6f-35eac1ce3e7a",
+      "name": "One Approval at a Time"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        272
+      ],
+      "id": "10179ef8-6d2a-4bd4-8e00-e9e35faef821",
+      "name": "Every Morning 8am"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Intake\nRuns daily at 8am (or manually). Reads the hospital watchlist and past alerts, then pulls all current FDA shortages with pagination, retries and a timeout. Stops with an error if the API returns no data.",
+        "height": 560,
+        "width": 1312,
+        "color": "#374D62"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "91f56653-2db6-4e44-9640-c0f84cf8bb6b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Prepare and match\nSplits about 1,100 package-level records, keeps the useful fields, matches them to the watchlist and groups them into one record per drug.",
+        "height": 560,
+        "width": 480,
+        "color": "#3E4D60"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        -48
+      ],
+      "id": "316c7dd5-ac01-408f-97b7-fb76e3323826",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 3. AI triage\nLLM classifies severity and likely cause, flags expired recovery dates and drafts an alert. Output is validated against a fixed schema. Drugs alerted in the last 7 days are not escalated again.",
+        "height": 560,
+        "width": 464,
+        "color": "#3E4D60"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        -48
+      ],
+      "id": "2ba88e11-79bc-48ad-a377-8a63124b38d7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 4. Daily digest\nOne summary email: what needs approval and what is only being monitored.",
+        "height": 560,
+        "width": 352,
+        "color": "#434D5E"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        -48
+      ],
+      "id": "141e69df-e3df-4717-90b9-821ed8899373",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 5. Human approval\nEscalation rule combines hospital priority with AI severity. Each alert waits for pharmacist approval by email, one drug at a time. Nothing reaches a department without approval.",
+        "height": 560,
+        "width": 992,
+        "color": "#9ABBBC"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        -48
+      ],
+      "id": "8226957c-5331-4449-9eff-63540dd145c7",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 6. Audit log\nEvery outcome is written to Google Sheets: Sent, Rejected, No response or Not escalated.",
+        "height": 560,
+        "width": 912,
+        "color": "#434D5E"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3712,
+        -48
+      ],
+      "id": "cc35c49e-adb6-4c4f-b367-6452266e77ab",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "sendTo": "pharmacy@example.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2496,
+        80
+      ],
+      "id": "d5b77f94-3731-46e5-8831-b227658b57bd",
+      "name": "Send Daily Digest",
+      "webhookId": "64d3115e-b0be-4412-b150-0981df0cfde4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "obyDOQrjRZKeSE6x",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get FDA Shortages": {
+      "main": [
+        [
+          {
+            "node": "API Response OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Shortages": {
+      "main": [
+        [
+          {
+            "node": "Clean Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Watchlist": {
+      "main": [
+        [
+          {
+            "node": "Get Alert Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Fields": {
+      "main": [
+        [
+          {
+            "node": "Match Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Watchlist": {
+      "main": [
+        [
+          {
+            "node": "LLM Triage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Triage": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Validate": {
+      "main": [
+        [
+          {
+            "node": "Build Digest",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Needs Escalation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Escalation?": {
+      "main": [
+        [
+          {
+            "node": "One Approval at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Not Escalated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pharmacist Approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Send Alert to Department",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert to Department": {
+      "main": [
+        [
+          {
+            "node": "Mark Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Sent": {
+      "main": [
+        [
+          {
+            "node": "Log Outcome",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "One Approval at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Rejected": {
+      "main": [
+        [
+          {
+            "node": "Log Outcome",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "One Approval at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Not Escalated": {
+      "main": [
+        [
+          {
+            "node": "Log Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Response OK?": {
+      "main": [
+        [
+          {
+            "node": "Split Shortages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail: No API Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Alert Log": {
+      "main": [
+        [
+          {
+            "node": "Get FDA Shortages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Approval at a Time": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Pharmacist Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every Morning 8am": {
+      "main": [
+        [
+          {
+            "node": "Get Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "EMHxz5ScxcOJFsvq",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timezone": "Europe/Madrid"
+  },
+  "versionId": "db9f31e2-8229-4d66-b3ff-4ca8fdbc8e16",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0190f4b3166337be956d419dac362d95ca13b013de410ba6152ac2234fd4b77f"
+  },
+  "nodeGroups": [],
+  "id": "ZlylEp9AWYqEmuVU",
+  "tags": []
+}

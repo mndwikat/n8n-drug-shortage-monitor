@@ -1,0 +1,69 @@
+{
+  "name": "Drug Shortage Monitor - Error Alerts",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4a5e09bc-be42-40a7-8978-667ade97e565",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "pharmacy@example.com",
+        "subject": "=Workflow failed: {{ $json.workflow.name }}",
+        "emailType": "text",
+        "message": "=  The drug shortage monitor did not complete.\n\n   Workflow: {{ $json.workflow.name }}\n   Failed at node: {{ $json.execution.lastNodeExecuted }}\n   Error: {{ $json.execution.error.message }}\n   Time: {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\n\n   Open the execution: {{ $json.execution.url }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a0763b02-29fb-497b-b55d-cb3afe8bcf1a",
+      "name": "Email Failure Alert",
+      "webhookId": "79dbb131-d27c-43fe-999e-3d8b0e969f29",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "obyDOQrjRZKeSE6x",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Email Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6d2a139b-5ecc-4e95-befa-5820576fb39a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0190f4b3166337be956d419dac362d95ca13b013de410ba6152ac2234fd4b77f"
+  },
+  "nodeGroups": [],
+  "id": "EMHxz5ScxcOJFsvq",
+  "tags": []
+}
